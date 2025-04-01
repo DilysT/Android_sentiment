@@ -7,6 +7,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,6 +22,8 @@ class MyApp extends StatelessWidget {
 }
 
 class SentimentAnalysisPage extends StatefulWidget {
+  const SentimentAnalysisPage({super.key});
+
   @override
   _SentimentAnalysisPageState createState() => _SentimentAnalysisPageState();
 }
@@ -27,27 +31,38 @@ class SentimentAnalysisPage extends StatefulWidget {
 class _SentimentAnalysisPageState extends State<SentimentAnalysisPage> {
   final TextEditingController _controller = TextEditingController();
   String _sentimentResult = '';
-  bool _isLoading = false;
+  bool _isLoading = false; // Thêm trạng thái loading
 
   Future<void> _analyzeSentiment() async {
     setState(() {
-      _isLoading = true;
-      _sentimentResult = '';
+      _isLoading = true; // Bắt đầu tải
+      _sentimentResult = ''; // Xóa kết quả cũ
     });
 
-    final String apiUrl = 'https://044e-34-82-241-130.ngrok-free.app/predict';
+    final String apiKey = 'AIzaSyCQlXIu13tGakMvZAtZDx245oZrUf7Y5Fo';
+    final String url =
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey';
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'text': _controller.text}),
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': _controller.text}
+              ]
+            }
+          ]
+        }),
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         setState(() {
-          _sentimentResult = data['sentiment'];
+          _sentimentResult =
+              data['candidates'][0]['content']['parts'][0]['text'];
         });
       } else {
         setState(() {
@@ -61,7 +76,7 @@ class _SentimentAnalysisPageState extends State<SentimentAnalysisPage> {
     }
 
     setState(() {
-      _isLoading = false;
+      _isLoading = false; // Kết thúc tải
     });
   }
 
@@ -69,30 +84,30 @@ class _SentimentAnalysisPageState extends State<SentimentAnalysisPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sentiment Analysis'),
+        title: const Text('Sentiment Analysis'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _controller,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Enter your sentence',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator() // Vòng xoay khi đang tải
                 : ElevatedButton(
-              onPressed: _analyzeSentiment,
-              child: Text('Analyze Sentiment'),
-            ),
-            SizedBox(height: 20),
+                    onPressed: _analyzeSentiment,
+                    child: const Text('Analyze Sentiment'),
+                  ),
+            const SizedBox(height: 20),
             Text(
               _sentimentResult,
-              style: TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),
